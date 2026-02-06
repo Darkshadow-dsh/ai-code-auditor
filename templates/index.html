@@ -136,11 +136,56 @@
             ✅ GÜVENLİ: Kritik bir zafiyet tespit edilemedi.
         </div>
     {% endif %}
+    
+    {% elif code_input %}
+        <div class="clean">
+            ✅ GÜVENLİ: Kritik bir zafiyet tespit edilemedi.
+        </div>
+    {% endif %}
 
+    <div class="support-box">
+        <p style="color: #8b949e; font-size: 13px; margin-bottom: 10px;">
+            Bu proje açık kaynak geliştirilmektedir. Geliştiriciye bir kahve ısmarla! ☕
+        </p>
+        <a href="https://www.buymeacoffee.com/SENIN_KULLANICI_ADIN" target="_blank" class="donate-btn">
+            ☕ Destek Ol (1$)
+        </a>
+    </div>
     <div class="footer">
         Powered by Python Regex Engine & Heuristic Analysis
     </div>
 </div>
 
-</body>
+    
+    
+    <div class="footer">
+        Powered by Python Regex Engine & Heuristic Analysis
+    </div>
+
+</div>
+/* ... diğer stiller bittikten sonra ... */
+        
+        .support-box {
+            margin-top: 30px;
+            text-align: center;
+            border-top: 1px solid #30363d;
+            padding-top: 20px;
+        }
+        .donate-btn {
+            background-color: #FFDD00; /* BMC Sarısı */
+            color: #000000;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: transform 0.2s;
+            display: inline-block;
+            border: 2px solid #FFDD00;
+        }
+        .donate-btn:hover {
+            transform: scale(1.05); /* Üzerine gelince hafif büyür */
+            background-color: #e6c700;
+            cursor: pointer;
+        }
 </html>
