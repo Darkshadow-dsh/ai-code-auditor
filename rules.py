@@ -4,142 +4,86 @@ def find_hardcoded_secrets(code_text):
     findings = []
     lines = code_text.split('\n')
     
-    # --- 1. SEVİYE: VENDOR SPESİFİK API KEYLER ---
-    # Not: Telefondan kopyalarken bozulmasın diye hepsini parçaladık.
-    vendor_patterns = {
-        "Google API Key": (
-            r"AIza[0-9A-Za-z\-_]{35}", 
-            "HIGH", 
-            "Google API anahtarı bulundu."
-        ),
-        "AWS Access Key": (
-            r"(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)"
-            r"[A-Z0-9]{16}", 
-            "HIGH", 
-            "AWS Access Key bulundu."
-        ),
-        "GitHub Token": (
-            r"ghp_[0-9a-zA-Z]{36}", 
-            "CRITICAL", 
-            "GitHub Token bulundu."
-        ),
-        "Stripe Secret": (
-            r"sk_live_[0-9a-zA-Z]{24}", 
-            "CRITICAL", 
-            "Stripe Canlı Anahtarı bulundu!"
-        ),
-        "Slack Token": (
-            r"xox[baprs]-([0-9a-zA-Z]{10,48})", 
-            "HIGH", 
-            "Slack Bot Token bulundu."
-        ),
-        "Heroku API Key": (
-            r"[h|H]eroku.*[0-9A-F]{8}-[0-9A-F]{4}-"
-            r"[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}", 
-            "HIGH", 
-            "Heroku API Key bulundu."
-        ),
-        "Facebook Token": (
-            r"EAACEdEose0cBA[0-9A-Za-z]+", 
-            "HIGH", 
-            "Facebook Token bulundu."
-        ),
-        "Twilio Auth": (
-            r"SK[0-9a-fA-F]{32}", 
-            "HIGH", 
-            "Twilio Anahtarı bulundu."
-        )
+    # --- PARCALANMIS REGEX (KOPYALAMA HATASINA SON) ---
+    
+    # 1. AWS KEY (Parca parca)
+    aws_1 = r"(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|"
+    aws_2 = r"AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"
+    aws_pattern = aws_1 + aws_2
+
+    # 2. GOOGLE KEY
+    google_pattern = r"AIza[0-9A-Za-z\-_]{35}"
+    
+    # 3. STRIPE (ODEME)
+    stripe_pattern = r"sk_live_[0-9a-zA-Z]{24}"
+
+    # 4. GITHUB TOKEN
+    github_pattern = r"ghp_[0-9a-zA-Z]{36}"
+
+    # 5. IPV4 ADRESI (Cok uzun oldugu icin 3 parcaya bolduk)
+    ip_1 = r"\b(?!127\.0\.0\.1)(?!0\.0\.0\.0)"
+    ip_2 = r"(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
+    ip_3 = r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
+    ip_pattern = ip_1 + ip_2 + ip_3
+
+    # 6. PRIVATE KEY
+    pk_1 = r"-----BEGIN (RSA|DSA|EC|PGP) "
+    pk_2 = r"PRIVATE KEY-----"
+    pk_pattern = pk_1 + pk_2
+
+    # DESENLERI LISTEYE EKLE
+    patterns = {
+        "AWS Key": (aws_pattern, "HIGH"),
+        "Google Key": (google_pattern, "HIGH"),
+        "Stripe Secret": (stripe_pattern, "CRITICAL"),
+        "GitHub Token": (github_pattern, "CRITICAL"),
+        "IP Adresi": (ip_pattern, "LOW"),
+        "Private Key": (pk_pattern, "CRITICAL")
     }
 
-    # --- 2. SEVİYE: GENEL VERİ SIZINTILARI ---
-    general_patterns = {
-        "IPv4 Adresi": (
-            r"\b(?!127\.0\.0\.1)(?!0\.0\.0\.0)"
-            r"(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
-            r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b", 
-            "LOW", 
-            "Sunucu IP adresi unutulmuş."
-        ),
-        "Email Adresi": (
-            r"\b[A-Za-z0-9._%+-]+@"
-            r"[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", 
-            "LOW", 
-            "E-posta adresi bulundu."
-        ),
-        "Private Key": (
-            r"-----BEGIN (RSA|DSA|EC|PGP) PRIVATE KEY-----", 
-            "CRITICAL", 
-            "Özel Anahtar (Private Key) açıkta!"
-        )
-    }
-
-    # --- 3. SEVİYE: KRİPTOGRAFİK ZAYIFLIKLAR ---
-    crypto_weaknesses = [
-        ("hashlib.md5", "MEDIUM", "MD5 kullanmayın."),
-        ("hashlib.sha1", "MEDIUM", "SHA1 kullanmayın."),
-        ("DES.new", "HIGH", "DES çok eskidir.")
-    ]
-
-    # --- 4. SEVİYE: KONFİGÜRASYON ---
-    config_issues = [
-        ("debug=True", "HIGH", "Debug modu açık."),
-        ("DEBUG = True", "HIGH", "Debug modu açık."),
-        ("verify=False", "HIGH", "SSL kontrolü kapalı.")
-    ]
-
-    keyword_patterns = ["password", "passwd", "secret", "token", "api_key"]
+    # --- BASIT KONTROLLER ---
+    bad_configs = ["debug=True", "verify=False"]
+    keywords = ["password", "secret", "api_key"]
 
     for i, line in enumerate(lines):
-        line_num = i + 1
-        content = line.strip()
-        if not content or content.startswith("#"): continue
+        num = i + 1
+        txt = line.strip()
+        if not txt or txt.startswith("#"): continue
 
-        # A) Vendor Taraması
-        for name, (pattern, severity, msg) in vendor_patterns.items():
-            if re.search(pattern, content):
+        # A) REGEX TARAMASI
+        for name, data in patterns.items():
+            if re.search(data[0], txt):
                 findings.append({
-                    "line": line_num, 
-                    "content": content[:80], 
-                    "issue": name, 
-                    "severity": severity, 
-                    "recommendation": msg
+                    "line": num,
+                    "content": txt[:50],
+                    "issue": name,
+                    "severity": data[1],
+                    "recommendation": "Bunu gizleyin!"
                 })
 
-        # B) Genel Taramalar
-        for name, (data, severity, msg) in general_patterns.items():
-            if isinstance(data, tuple): pattern = data[0]
-            else: pattern = data
-            
-            if re.search(pattern, content):
+        # B) KELIME TARAMASI
+        for kw in keywords:
+            # kw="deger" formatini ara
+            k_reg = fr"{kw}\s*=\s*['\"].+['\"]"
+            if re.search(k_reg, txt, re.IGNORECASE):
+                if "os.getenv" in txt: continue
                 findings.append({
-                    "line": line_num, 
-                    "content": content[:80], 
-                    "issue": name, 
-                    "severity": severity, 
-                    "recommendation": msg
+                    "line": num,
+                    "content": txt[:50],
+                    "issue": "Sabit Sifre",
+                    "severity": "HIGH",
+                    "recommendation": ".env kullanin"
                 })
 
-        # C) Basit Kontroller
-        for check_str, severity, msg in (crypto_weaknesses + config_issues):
-            if check_str in content:
+        # C) AYARLAR
+        for bad in bad_configs:
+            if bad in txt:
                 findings.append({
-                    "line": line_num, 
-                    "content": content[:80], 
-                    "issue": "Güvenlik Riski", 
-                    "severity": severity, 
-                    "recommendation": msg
-                })
-
-        # D) Anahtar Kelimeler
-        for kw in keyword_patterns:
-            if re.search(fr"{kw}\s*=\s*['\"].+['\"]", content, re.IGNORECASE):
-                if "os.getenv" in content: continue
-                findings.append({
-                    "line": line_num, 
-                    "content": content[:80], 
-                    "issue": "Sabit Şifre", 
-                    "severity": "HIGH", 
-                    "recommendation": f"'{kw}' için .env kullanın."
+                    "line": num,
+                    "content": txt[:50],
+                    "issue": "Riskli Ayar",
+                    "severity": "HIGH",
+                    "recommendation": "Bunu kapatin"
                 })
 
     return findings
@@ -148,44 +92,21 @@ def find_eval_exec_usage(code_text):
     findings = []
     lines = code_text.split('\n')
     
-    # --- 5. SEVİYE: TEHLİKELİ FONKSİYONLAR ---
-    dangerous_funcs = {
-        "eval(": ("CRITICAL", "eval() RCE yaratır."),
-        "exec(": ("CRITICAL", "exec() RCE yaratır."),
-        "pickle.loads(": ("HIGH", "Pickle güvensizdir."),
-        "yaml.load(": ("HIGH", "yaml.safe_load kullanın."),
-        "os.popen(": ("MEDIUM", "subprocess kullanın.")
-    }
-
-    # --- 6. SEVİYE: SQL INJECTION ---
-    sql_patterns = [
-        (r"execute\(\s*f['\"].*SELECT", "f-string ile SQL yazmayın."),
-        (r"execute\(\s*['\"].*SELECT.*%.*%\s*\(", "SQL'de % formatlama yapmayın.")
-    ]
-
+    dangerous = ["eval(", "exec(", "pickle.loads("]
+    
     for i, line in enumerate(lines):
-        line_num = i + 1
-        content = line.strip()
-        if content.startswith("#"): continue
+        num = i + 1
+        txt = line.strip()
+        if txt.startswith("#"): continue
 
-        for func, (sev, msg) in dangerous_funcs.items():
-            if func in content:
+        for d in dangerous:
+            if d in txt:
                 findings.append({
-                    "line": line_num, 
-                    "content": content[:80], 
-                    "issue": "Tehlikeli Kod", 
-                    "severity": sev, 
-                    "recommendation": msg
+                    "line": num,
+                    "content": txt[:50],
+                    "issue": "Tehlikeli Kod",
+                    "severity": "CRITICAL",
+                    "recommendation": f"{d} kullanmayin!"
                 })
-
-        for pattern, msg in sql_patterns:
-            if re.search(pattern, content, re.IGNORECASE):
-                findings.append({
-                    "line": line_num, 
-                    "content": content[:80], 
-                    "issue": "SQL Enjeksiyon Riski", 
-                    "severity": "HIGH", 
-                    "recommendation": msg
-                })
-
+                
     return findings
