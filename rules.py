@@ -4,8 +4,7 @@ def find_hardcoded_secrets(code_text):
     findings = []
     lines = code_text.split('\n')
     
-    # --- 1. SEVİYE: VENDOR SPESİFİK API KEYLER (Hassas Atış) ---
-    # Bu desenler, firmaların kullandığı gerçek anahtar formatlarıdır.
+    # --- 1. SEVİYE: VENDOR SPESİFİK API KEYLER ---
     vendor_patterns = {
         "Google API Key": (r"AIza[0-9A-Za-z\-_]{35}", "HIGH", "Google API anahtarı ifşa olmuş."),
         "AWS Access Key": (r"(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}", "HIGH", "AWS Access Key ifşa olmuş."),
@@ -19,4 +18,20 @@ def find_hardcoded_secrets(code_text):
 
     # --- 2. SEVİYE: GENEL VERİ SIZINTILARI ---
     general_patterns = {
-        "IPv4 Adresi": (r"\b(?!127\.0\.0\.1)(?!0\.0\.0\.0)(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2
+        # HATAYI ÖNLEMEK İÇİN BU SATIRI GÜVENLİ HALE GETİRDİK:
+        "IPv4 Adresi": (
+            r"\b(?!127\.0\.0\.1)(?!0\.0\.0\.0)"
+            r"(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
+            r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b", 
+            "LOW", 
+            "Kod içinde sunucu IP adresi unutulmuş."
+        ),
+        "Email Adresi": (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "LOW", "Kod içinde e-posta adresi (kişisel veri) var."),
+        "Private Key": (r"-----BEGIN (RSA|DSA|EC|PGP) PRIVATE KEY-----", "CRITICAL", "SSH/SSL Özel Anahtarı (Private Key) açıkta!")
+    }
+
+    # --- 3. SEVİYE: KRİPTOGRAFİK ZAYIFLIKLAR ---
+    crypto_weaknesses = [
+        ("hashlib.md5", "MEDIUM", "MD5 güvenli değildir (kırılabilir). SHA-256 kullanın."),
+        ("hashlib.sha1", "MEDIUM", "SHA1 güvenli değildir. SHA-256 kullanın."),
+        ("DES.new", "HIGH", "DES şifreleme
