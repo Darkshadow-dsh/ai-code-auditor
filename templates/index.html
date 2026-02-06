@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Code Auditor | Cyber Security</title>
+    <title>Code Sentinel | Security Scanner</title>
     <style>
         body {
             background-color: #0d1117;
@@ -22,6 +22,13 @@
             text-align: center;
             border-bottom: 2px solid #30363d;
             padding-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #8b949e;
+            font-size: 14px;
+            margin-bottom: 20px;
         }
         textarea {
             width: 100%;
@@ -33,6 +40,7 @@
             padding: 10px;
             font-family: monospace;
             resize: vertical;
+            font-size: 14px;
         }
         button {
             width: 100%;
@@ -45,6 +53,7 @@
             font-size: 18px;
             cursor: pointer;
             font-weight: bold;
+            transition: background 0.3s;
         }
         button:hover {
             background-color: #2ea043;
@@ -84,38 +93,53 @@
             color: #7ee787;
             font-size: 18px;
             border: 1px solid #238636;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #484f58;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🛡️ AI GÜVENLİK DENETLEYİCİSİ</h1>
-    <p>Kodunuzu aşağıya yapıştırın, güvenlik açıklarını (Şifreler, API Keyler, SQL Injection) bulalım.</p>
+    <h1>🛡️ CODE SENTINEL</h1>
+    <div class="subtitle">STATIC APPLICATION SECURITY TESTING (SAST) TOOL</div>
     
     <form method="POST">
-        <textarea name="code_input" placeholder="Python kodunuzu buraya yapıştırın... (Örn: stripe_key = 'sk_live_...')">{{ code_input }}</textarea>
-        <button type="submit">ANALİZ ET 🚀</button>
+        <textarea name="code_input" placeholder="# Kodunuzu buraya yapıştırın...&#10;# Code Sentinel güvenlik taramasını başlatsın.&#10;&#10;import os&#10;api_key = '...' ">{{ code_input }}</textarea>
+        <button type="submit">TARAMAYI BAŞLAT ⚡</button>
     </form>
 
     {% if results %}
-        <h2 style="margin-top: 30px;">🚨 TESPİT EDİLEN RİSKLER:</h2>
+        <h2 style="margin-top: 30px; color: #ff7b72;">🚨 TESPİT EDİLEN TEHDİTLER:</h2>
         <div class="result-box">
             {% for find in results %}
                 <div class="result-item severity-{{ find.severity }}">
                     <div>
-                        <strong>{{ find.issue }}</strong> (Satır: {{ find.line }})<br>
-                        <small>{{ find.recommendation }}</small>
+                        <strong style="font-size: 1.1em;">{{ find.issue }}</strong> 
+                        <span style="color: #8b949e; font-size: 0.9em;">(Satır: {{ find.line }})</span><br>
+                        <small style="opacity: 0.8;">{{ find.recommendation }}</small>
                     </div>
-                    <span style="font-weight:bold;">{{ find.severity }}</span>
+                    <div style="text-align: right;">
+                        <span style="font-weight:bold; font-size: 0.8em; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px;">{{ find.severity }}</span>
+                    </div>
                 </div>
             {% endfor %}
         </div>
     {% elif code_input %}
-        <div style="margin-top: 20px;" class="clean">
-            ✅ TEBRİKLER! Kodunuzda belirgin bir güvenlik açığı bulunamadı.
+        <div class="clean">
+            ✅ GÜVENLİ: Kritik bir zafiyet tespit edilemedi.
         </div>
     {% endif %}
+
+    <div class="footer">
+        Powered by Python Regex Engine & Heuristic Analysis
+    </div>
 </div>
 
 </body>
