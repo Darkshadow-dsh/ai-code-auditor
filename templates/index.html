@@ -96,8 +96,32 @@
             margin-top: 20px;
             border-radius: 6px;
         }
-        .footer {
+        /* DESTEK BUTONU STİLİ */
+        .support-box {
             margin-top: 40px;
+            text-align: center;
+            border-top: 1px solid #30363d;
+            padding-top: 20px;
+        }
+        .donate-btn {
+            background-color: #FFDD00;
+            color: #000000;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: transform 0.2s;
+            display: inline-block;
+            border: 2px solid #FFDD00;
+        }
+        .donate-btn:hover {
+            transform: scale(1.05);
+            background-color: #e6c700;
+            cursor: pointer;
+        }
+        .footer {
+            margin-top: 20px;
             text-align: center;
             font-size: 12px;
             color: #484f58;
@@ -136,12 +160,6 @@
             ✅ GÜVENLİ: Kritik bir zafiyet tespit edilemedi.
         </div>
     {% endif %}
-    
-    {% elif code_input %}
-        <div class="clean">
-            ✅ GÜVENLİ: Kritik bir zafiyet tespit edilemedi.
-        </div>
-    {% endif %}
 
     <div class="support-box">
         <p style="color: #8b949e; font-size: 13px; margin-bottom: 10px;">
@@ -151,41 +169,11 @@
             ☕ Destek Ol (1$)
         </a>
     </div>
+
     <div class="footer">
         Powered by Python Regex Engine & Heuristic Analysis
     </div>
 </div>
 
-    
-    
-    <div class="footer">
-        Powered by Python Regex Engine & Heuristic Analysis
-    </div>
-
-</div>
-/* ... diğer stiller bittikten sonra ... */
-        
-        .support-box {
-            margin-top: 30px;
-            text-align: center;
-            border-top: 1px solid #30363d;
-            padding-top: 20px;
-        }
-        .donate-btn {
-            background-color: #FFDD00; /* BMC Sarısı */
-            color: #000000;
-            text-decoration: none;
-            font-weight: bold;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            transition: transform 0.2s;
-            display: inline-block;
-            border: 2px solid #FFDD00;
-        }
-        .donate-btn:hover {
-            transform: scale(1.05); /* Üzerine gelince hafif büyür */
-            background-color: #e6c700;
-            cursor: pointer;
-        }
+</body>
 </html>
